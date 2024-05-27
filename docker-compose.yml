@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  web-dev:
+    build:
+      context: ./app
+      dockerfile: dev.Dockerfile
+    ports:
+      - 3333:3000
+    env_file:
+      - ./.env.dev
+    volumes:
+      - ./app:/app
+      - ./uploads:/app/uploads
+    profiles:
+      - dev
+
+  web-prod:
+    build:
+      context: ./app
+      dockerfile: prod.Dockerfile
+    ports:
+      - 3333:3000
+    env_file:
+      - ./.env.prod
+    volumes:
+      - ./uploads:/app/uploads
+    profiles:
+      - prod
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: developer  
+      POSTGRES_PASSWORD: developer
+      POSTGRES_DB: gopload
+    ports:
+      - 5432:5432
+    volumes:
+      - gopgdata:/var/lib/postgresql/data
+
+volumes:
+  gopgdata:
