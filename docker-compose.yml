@@ -12,21 +12,29 @@ services:
     volumes:
       - ./app:/app
       - ./uploads:/app/uploads
+    depends_on:
+      - db
     profiles:
       - dev
+    networks:
+      - rede_local
 
   web-prod:
     build:
       context: ./app
       dockerfile: prod.Dockerfile
     ports:
-      - 3333:3000
+      - 6998:3000
     env_file:
       - ./.env.prod
     volumes:
       - ./uploads:/app/uploads
+    depends_on:
+      - db
     profiles:
       - prod
+    networks:
+      - rede_local
 
   db:
     image: postgres:13
@@ -35,9 +43,15 @@ services:
       POSTGRES_PASSWORD: developer
       POSTGRES_DB: gopload
     ports:
-      - 5432:5432
+      - 6697:5432
     volumes:
       - gopgdata:/var/lib/postgresql/data
+    networks:
+      - rede_local
+  
+networks:
+  rede_local:
+    driver: bridge
 
 volumes:
   gopgdata:
