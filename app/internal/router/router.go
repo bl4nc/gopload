@@ -1,7 +1,6 @@
 package router
 
 import (
-	"log/slog"
 	"net/http"
 	"os"
 
@@ -11,8 +10,6 @@ import (
 )
 
 func RoutesSetup() *gin.Engine {
-	slog.Info("run")
-
 	r := gin.Default()
 
 	username := os.Getenv("BASIC_AUTH_USERNAME")
@@ -21,6 +18,7 @@ func RoutesSetup() *gin.Engine {
 	{
 		authorized.POST("/upload", uploadmodule.UploadFile)
 		authorized.GET("/file/:idArquivo", uploadmodule.DownloadFile)
+		authorized.DELETE("/file/:idArquivo", uploadmodule.DeleteFile)
 	}
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ON"})

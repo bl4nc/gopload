@@ -14,7 +14,9 @@ type FileInfo struct {
 	ID           uuid.UUID `gorm:"type:uuid;primary_key"`
 	OriginalName string
 	Path         string
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
+	IsActive     bool       `gorm:"default:true"`
+	CreatedAt    time.Time  `gorm:"autoCreateTime"`
+	DeletedAt    *time.Time `gorm:"default:null"`
 }
 
 var db *gorm.DB
@@ -47,11 +49,24 @@ func GetFileInfoByID(idArquivo uuid.UUID) (FileInfo, error) {
 	db := dbconnect.Connect()
 	defer db.Close()
 	var fileInfo FileInfo
-	if err := db.Where("id = ?", idArquivo).First(&fileInfo).Error; err != nil {
+	if err := db.Where("id = ? AND is_active = ?", idArquivo, true).First(&fileInfo).Error; err != nil {
 		if gorm.IsRecordNotFoundError(err) {
 			return FileInfo{}, fmt.Errorf("file not found")
 		}
 		return FileInfo{}, err
 	}
 	return fileInfo, nil
+}
+
+func UpdateFileInfoStatus(idArquivo uuid.UUID) error {
+	db := dbconnect.Connect()
+	defer db.Close()
+	now := time.Now()
+	if err := db.Model(&FileInfo{}).Where("id = ?", idArquivo).Update(map[string]interface{}{
+		"is_active":  false,
+		"deleted_at": now,
+	}).Error; err != nil {
+		return err
+	}
+	return nil
 }

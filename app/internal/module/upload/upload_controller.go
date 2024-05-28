@@ -3,6 +3,7 @@ package uploadmodule
 import (
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
 
@@ -84,4 +85,31 @@ func DownloadFile(c *gin.Context) {
 		return
 	}
 	c.FileAttachment(fileInfo.Path, fileInfo.OriginalName)
+}
+
+func DeleteFile(c *gin.Context) {
+	idStr := c.Param("idArquivo")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		return
+	}
+
+	fileInfo, err := entities.GetFileInfoByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	if err := os.Remove(fileInfo.Path); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete file"})
+		return
+	}
+
+	if err := entities.UpdateFileInfoStatus(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update file status"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
 }
